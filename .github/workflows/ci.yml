@@ -1,0 +1,49 @@
+name: CI/CD CiviConnect
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pruebas:
+    name: Pruebas de integración y cobertura
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verificar estilo con flake8
+        run: flake8 app tests --max-line-length=100 --count
+
+      - name: Ejecutar migraciones Alembic
+        run: alembic upgrade head
+
+      - name: Ejecutar pruebas de integración con cobertura
+        run: pytest tests/ -v --cov=app --cov-report=xml --cov-report=term
+
+      - name: Analizar calidad con SonarCloud
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Publicar reporte de cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-cobertura
+          path: coverage.xml
