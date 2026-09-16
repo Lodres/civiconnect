@@ -1,5 +1,5 @@
 SQLAlchemy==2.0.53
-alembic==1.16.6
+alembic==1.16.5 
 bcrypt==5.0.1
 pytest==9.1.1
 pytest-cov==7.0.0
